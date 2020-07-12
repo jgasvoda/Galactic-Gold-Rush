@@ -2562,6 +2562,7 @@ GameObject:
   - component: {fileID: 2079478895455842130}
   - component: {fileID: 2351687581275420058}
   - component: {fileID: 2001567086}
+  - component: {fileID: 2159552668823341130}
   m_Layer: 0
   m_Name: Red1
   m_TagString: Untagged
@@ -2569,6 +2570,20 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!64 &2159552668823341130
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2159552668823341129}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -7757311004538802270, guid: a313c115983d9fe4eadf30ba26fe3c8c, type: 3}
 --- !u!4 &2184424815685517694
 Transform:
   m_ObjectHideFlags: 0
