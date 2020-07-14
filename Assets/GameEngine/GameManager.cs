@@ -66,7 +66,7 @@ namespace GGR_Game_Engine
 
             CurrentPlayer = 1;
 
-            PlayGame();
+            //PlayGame();
         }
 
         public int PlayGame()
