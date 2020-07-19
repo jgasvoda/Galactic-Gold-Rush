@@ -1,13 +1,17 @@
-﻿using System.Collections;
+﻿using GGR_Game_Engine;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class SpaceSelect : MonoBehaviour
 {
+    GameManager _gameManager;
     // Start is called before the first frame update
     void Start()
     {
-        
+        _gameManager = GameManager.Instance;
+        PolygonCollider2D collider = gameObject.AddComponent<PolygonCollider2D>();
+        collider.enabled = false;
     }
 
     // Update is called once per frame
@@ -18,6 +22,6 @@ public class SpaceSelect : MonoBehaviour
 
     public void OnMouseDown()
     {
-        GetComponent<Renderer>().material.SetColor("_Color", new Color32(255, 171, 0, 255));
+        _gameManager.SpaceSelect(gameObject);
     }
 }

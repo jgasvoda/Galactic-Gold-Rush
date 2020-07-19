@@ -8,16 +8,17 @@ using UnityEngine;
 
 namespace GGR_Game_Engine
 {
-    public sealed class GameManager : MonoBehaviour
+    public sealed class GameManager
     {
-        private GameBoard Board { get; set; }
-        private int CurrentPlayer { get; set; }
+        private GameBoard Board;
+        private int CurrentPlayer;
+        private int SelectedPiece;
 
-        private List<Piece> Player1Pieces { get; set; }
-        private int Player1Score { get; set; }
+        private List<Piece> Player1Pieces;
+        private int Player1Score;
 
-        private List<Piece> Player2Pieces { get; set; }
-        private int Player2Score { get; set; }
+        private List<Piece> Player2Pieces;
+        private int Player2Score;
 
         private static readonly Lazy<GameManager>
         lazy =
@@ -31,16 +32,16 @@ namespace GGR_Game_Engine
             CreateGame();
         }
 
-        void Start()
-        {
+        //void Start()
+        //{
 
-        }
+        //}
 
-        // Update is called once per frame
-        void Update()
-        {
+        //// Update is called once per frame
+        //void Update()
+        //{
 
-        }
+        //}
         
         private void CreateGame()
         {
@@ -65,27 +66,7 @@ namespace GGR_Game_Engine
             }
 
             CurrentPlayer = 1;
-
-            //PlayGame();
-        }
-
-        public int PlayGame()
-        {
-            while(GetVictor() == 0)
-            {
-                //Console.WriteLine("Player " + CurrentPlayer + "'s Turn");
-                if (CurrentPlayer == 1)
-                {
-                    PlayerTurn(Player1Pieces);
-                }
-                else
-                {
-                    PlayerTurn(Player2Pieces);
-                }
-
-                CurrentPlayer = CurrentPlayer == 1 ? 2 : 1;
-            }
-            return GetVictor();
+            StartPlayerTurn();
         }
 
         public int GetVictor()
@@ -104,46 +85,85 @@ namespace GGR_Game_Engine
             }
         }
 
-        public void PlayerTurn(List<Piece> playerPieces)
+        private void StartPlayerTurn()
         {
-            
-            foreach(var piece in playerPieces)
+            List<Piece> playerPieces = CurrentPlayer == 1 ? Player1Pieces : Player2Pieces;
+            string teamColor = CurrentPlayer == 1 ? "Blue" : "Red";
+
+            for (int i = 0; i < 3; i++)
             {
-                piece.WaitingForMove = true;
-                //Coordinates location = piece.CurrentLocation;
-                //BoardSpace currentSpace = Board.Spaces[location.Section][location.Row][location.Position];
+                playerPieces[i].WaitingForMove = true;
 
-                //foreach(var adjacentSpace in currentSpace.AdjacentSpaces)
-                //{
-                //    var target = GameObject.Find("Space." + adjacentSpace.Section + "." + adjacentSpace.Row + "." + adjacentSpace.Position);
-                //    target.GetComponent<MeshCollider>().enabled = true;
-                //}
-
-
-                //GetPlayerMove(); 
-
-                //PausedForUser = true;
-                //while (PausedForUser) { }
-
+                var target = GameObject.Find(teamColor + i);
+                target.GetComponent<CircleCollider2D>().enabled = true;
             }
-            while (playerPieces.Any(p => p.WaitingForMove)) { };
 
+            SelectedPiece = -1;
         }
-
-        public void PieceSelect(GameObject seletedSpace)
+        
+        private void UpdatePlayerTurn(List<Piece> playerPieces)
         {
-            var pieceNumber = (int)Char.GetNumericValue(seletedSpace.name[seletedSpace.name.Length - 1]);
-            var piece = CurrentPlayer == 1 ? Player1Pieces[pieceNumber] : Player2Pieces[pieceNumber];
+            playerPieces[SelectedPiece].WaitingForMove = false;
 
-            Coordinates location = piece.CurrentLocation;
-            BoardSpace currentSpace = Board.Spaces[location.Section][location.Row][location.Position];
-
-            foreach (var adjacentSpace in currentSpace.AdjacentSpaces)
+            if(!playerPieces.Any(p => p.WaitingForMove))
             {
-                var target = GameObject.Find("Space." + adjacentSpace.Section + "." + adjacentSpace.Row + "." + adjacentSpace.Position);
-                target.GetComponent<MeshCollider>().enabled = true;
+                CurrentPlayer = CurrentPlayer == 1 ? 2 : 1;
+                StartPlayerTurn();
+            }
+            else
+            {
+                SelectedPiece = -1;
             }
         }
 
+        public void PieceSelect(GameObject seletedObject)
+        {
+            string teamColor = CurrentPlayer == 1 ? "Blue" : "Red";
+            if (SelectedPiece == -1 && seletedObject.name.Contains(teamColor))
+            {
+                SelectedPiece = (int)char.GetNumericValue(seletedObject.name[seletedObject.name.Length - 1]);
+                Piece gamePiece = CurrentPlayer == 1 ? Player1Pieces[SelectedPiece] : Player2Pieces[SelectedPiece];
+
+                Coordinates location = gamePiece.CurrentLocation;
+                BoardSpace currentSpace = Board.Spaces[location.Section][location.Row][location.Position];
+
+                foreach (var adjacentSpace in currentSpace.AdjacentSpaces)
+                {
+                    var target = GameObject.Find("Space." + adjacentSpace.Section + "." + adjacentSpace.Row + "." + adjacentSpace.Position);
+                    target.GetComponent<PolygonCollider2D>().enabled = true;
+                }
+            }
+        }
+
+        public void SpaceSelect(GameObject selectedObject)
+        {
+            //Disable board spaces
+            List<Piece> playerPieces = CurrentPlayer == 1 ? Player1Pieces : Player2Pieces;
+            Coordinates currentLocation = playerPieces[SelectedPiece].CurrentLocation;
+            BoardSpace currentBoardSpace = Board.Spaces[currentLocation.Section][currentLocation.Row][currentLocation.Position];
+            foreach (var adjacentSpace in currentBoardSpace.AdjacentSpaces)
+            {
+                GameObject target = GameObject.Find("Space." + adjacentSpace.Section + "." + adjacentSpace.Row + "." + adjacentSpace.Position);
+                target.GetComponent<PolygonCollider2D>().enabled = false;
+            }
+
+            //Move selectedPiece to new location
+            string teamColor = CurrentPlayer == 1 ? "Blue" : "Red";
+            GameObject currentPiece = GameObject.Find(teamColor + SelectedPiece);
+            currentPiece.gameObject.transform.localPosition = selectedObject.transform.localPosition;
+
+            //Disable selectedPiece
+            currentPiece.GetComponent<CircleCollider2D>().enabled = false;
+
+            //Update GameBoard
+            var newLocation = new Coordinates(
+                (int)char.GetNumericValue(selectedObject.name[6]),
+                (int)char.GetNumericValue(selectedObject.name[8]),
+                (int)char.GetNumericValue(selectedObject.name[10])
+            );
+            playerPieces[SelectedPiece].Move(newLocation);
+
+            UpdatePlayerTurn(playerPieces);
+        }
     }
 }
