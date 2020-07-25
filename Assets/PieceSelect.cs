@@ -1,8 +1,5 @@
-﻿using GGR_Game_Engine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using Assets.GameEngine;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class PieceSelect : MonoBehaviour
 {

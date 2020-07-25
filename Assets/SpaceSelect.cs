@@ -1,6 +1,4 @@
-﻿using GGR_Game_Engine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using Assets.GameEngine;
 using UnityEngine;
 
 public class SpaceSelect : MonoBehaviour

@@ -1,24 +1,17 @@
-﻿using GameEngine.Interface;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-namespace GGR_Game_Engine
+namespace Assets.GameEngine
 {
     public sealed class GameManager
     {
         private GameBoard Board;
-        private int CurrentPlayer;
-        private int SelectedPiece;
+        private Player CurrentPlayer;
 
-        private List<Piece> Player1Pieces;
-        private int Player1Score;
-
-        private List<Piece> Player2Pieces;
-        private int Player2Score;
+        private Player Player1;
+        private Player Player2;
 
         private static readonly Lazy<GameManager>
         lazy =
@@ -32,50 +25,38 @@ namespace GGR_Game_Engine
             CreateGame();
         }
 
-        //void Start()
-        //{
-
-        //}
-
-        //// Update is called once per frame
-        //void Update()
-        //{
-
-        //}
         
         private void CreateGame()
         {
             //Make a board with 4 rings
             Board = new GameBoard(4);
 
-
             //Add Pieces in starting locations
-            Player1Pieces = new List<Piece>();
-            Player2Pieces = new List<Piece>();
-
+            Player1 = new Player(1, "Blue");
+            Player2 = new Player(2, "Red");
             for (int i = 0; i < 6; i++)
             {
                 if (i < 3)
                 {
-                    Player1Pieces.Add(new Piece(1, new Coordinates(i, 0, 0)));
+                    Player1.AddPiece(new Piece(1, new Coordinates(i, 0, 0)));
                 }
                 else
                 {
-                    Player2Pieces.Add(new Piece(2, new Coordinates(i, 0, 0)));
+                    Player2.AddPiece(new Piece(2, new Coordinates(i, 0, 0)));
                 }
             }
 
-            CurrentPlayer = 1;
+            CurrentPlayer = Player1;
             StartPlayerTurn();
         }
 
         public int GetVictor()
         {
-            if (Player1Score >= 15)
+            if (Player1.Score >= 15)
             {
                 return 1;
             }
-            if (Player2Score >= 15)
+            if (Player2.Score >= 15)
             {
                 return 2;
             }
@@ -87,49 +68,49 @@ namespace GGR_Game_Engine
 
         private void StartPlayerTurn()
         {
-            List<Piece> playerPieces = CurrentPlayer == 1 ? Player1Pieces : Player2Pieces;
-            string teamColor = CurrentPlayer == 1 ? "Blue" : "Red";
-
+            CurrentPlayer.StartTurn();
             for (int i = 0; i < 3; i++)
             {
-                playerPieces[i].WaitingForMove = true;
-
-                var target = GameObject.Find(teamColor + i);
+                var target = GameObject.Find(CurrentPlayer.TeamColor + i);
                 target.GetComponent<CircleCollider2D>().enabled = true;
             }
-
-            SelectedPiece = -1;
         }
         
-        private void UpdatePlayerTurn(List<Piece> playerPieces)
+        private void UpdatePlayerTurn()
         {
-            playerPieces[SelectedPiece].WaitingForMove = false;
+            CurrentPlayer.SelectedPiece.WaitingForMove = false;
+            CurrentPlayer.DeselectPiece();
 
-            if(!playerPieces.Any(p => p.WaitingForMove))
+            if (CurrentPlayer.TurnOver())
             {
-                CurrentPlayer = CurrentPlayer == 1 ? 2 : 1;
+                if(CurrentPlayer.Team == 1)
+                {
+                    CurrentPlayer = Player2;
+                }
+                else
+                {
+                    CurrentPlayer = Player1;
+                }
+
                 StartPlayerTurn();
-            }
-            else
-            {
-                SelectedPiece = -1;
             }
         }
 
         public void PieceSelect(GameObject seletedObject)
         {
-            string teamColor = CurrentPlayer == 1 ? "Blue" : "Red";
-            if (SelectedPiece == -1 && seletedObject.name.Contains(teamColor))
+            //Validate piece can be clicked
+            if (CurrentPlayer.SelectedPiece == null && seletedObject.name.Contains(CurrentPlayer.TeamColor))
             {
-                SelectedPiece = (int)char.GetNumericValue(seletedObject.name[seletedObject.name.Length - 1]);
-                Piece gamePiece = CurrentPlayer == 1 ? Player1Pieces[SelectedPiece] : Player2Pieces[SelectedPiece];
+                int selection = (int)char.GetNumericValue(seletedObject.name[seletedObject.name.Length - 1]);
+                CurrentPlayer.SelectPiece(selection);
 
-                Coordinates location = gamePiece.CurrentLocation;
+                Coordinates location = CurrentPlayer.SelectedPiece.CurrentLocation;
                 BoardSpace currentSpace = Board.Spaces[location.Section][location.Row][location.Position];
 
+                //Enable neighboring spaces for selection
                 foreach (var adjacentSpace in currentSpace.AdjacentSpaces)
                 {
-                    var target = GameObject.Find("Space." + adjacentSpace.Section + "." + adjacentSpace.Row + "." + adjacentSpace.Position);
+                    GameObject target = GameObject.Find("Space." + adjacentSpace.Section + "." + adjacentSpace.Row + "." + adjacentSpace.Position);
                     target.GetComponent<PolygonCollider2D>().enabled = true;
                 }
             }
@@ -138,8 +119,7 @@ namespace GGR_Game_Engine
         public void SpaceSelect(GameObject selectedObject)
         {
             //Disable board spaces
-            List<Piece> playerPieces = CurrentPlayer == 1 ? Player1Pieces : Player2Pieces;
-            Coordinates currentLocation = playerPieces[SelectedPiece].CurrentLocation;
+            Coordinates currentLocation = CurrentPlayer.SelectedPiece.CurrentLocation;
             BoardSpace currentBoardSpace = Board.Spaces[currentLocation.Section][currentLocation.Row][currentLocation.Position];
             foreach (var adjacentSpace in currentBoardSpace.AdjacentSpaces)
             {
@@ -148,22 +128,21 @@ namespace GGR_Game_Engine
             }
 
             //Move selectedPiece to new location
-            string teamColor = CurrentPlayer == 1 ? "Blue" : "Red";
-            GameObject currentPiece = GameObject.Find(teamColor + SelectedPiece);
+            GameObject currentPiece = GameObject.Find(CurrentPlayer.TeamColor + CurrentPlayer.GetPieceNumber());
             currentPiece.gameObject.transform.localPosition = selectedObject.transform.localPosition;
 
-            //Disable selectedPiece
+            //Disable selectedPiece for remainder of turn
             currentPiece.GetComponent<CircleCollider2D>().enabled = false;
 
             //Update GameBoard
-            var newLocation = new Coordinates(
+            Coordinates newLocation = new Coordinates(
                 (int)char.GetNumericValue(selectedObject.name[6]),
                 (int)char.GetNumericValue(selectedObject.name[8]),
                 (int)char.GetNumericValue(selectedObject.name[10])
             );
-            playerPieces[SelectedPiece].Move(newLocation);
+            CurrentPlayer.SelectedPiece.Move(newLocation);
 
-            UpdatePlayerTurn(playerPieces);
+            UpdatePlayerTurn();
         }
     }
 }

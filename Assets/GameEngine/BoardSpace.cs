@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GGR_Game_Engine
+namespace Assets.GameEngine
 {
     public class BoardSpace
     {
@@ -38,7 +38,7 @@ namespace GGR_Game_Engine
             }
             
             //CounterClockwise
-            //Wrap to next section
+            //If position is 0, adjacent space is in neighboring section
             if(position == 0)
             {
                 if(section == 0)
@@ -56,7 +56,7 @@ namespace GGR_Game_Engine
             }
 
             //Clockwise
-            //Wrap to next section
+            //If position is at the end of the row, adjacent space is in neighboring section
             if (position == row * 2)
             {
                 if(section == 5)

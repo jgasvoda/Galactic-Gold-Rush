@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GGR_Game_Engine
+namespace Assets.GameEngine
 {
     public class Asteroid
     {
