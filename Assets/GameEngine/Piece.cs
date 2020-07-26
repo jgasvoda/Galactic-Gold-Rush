@@ -9,7 +9,7 @@ namespace Assets.GameEngine
     public class Piece
     {
         private int Team { get; set; }
-        private int Gold { get; set; }
+        public int Gold { get; set; }
         public Coordinates CurrentLocation { get; set; }
         public bool WaitingForMove { get; set; }
 

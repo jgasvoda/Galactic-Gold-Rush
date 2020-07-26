@@ -9,6 +9,7 @@ public class PieceSelect : MonoBehaviour
     void Start()
     {
         _gameManager = GameManager.Instance;
+        gameObject.GetComponent<MeshRenderer>().sortingOrder = 0;
     }
 
     // Update is called once per frame

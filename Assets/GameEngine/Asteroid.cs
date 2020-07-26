@@ -8,13 +8,36 @@ namespace Assets.GameEngine
 {
     public class Asteroid
     {
-        private int MineralCount { get; set; }
-        private int PlayerMine { get; set; }
+        public int Number { get; set; }
+        public int ControllingPlayer { get; set; }
 
-        public Asteroid(int mineralCount)
+
+        private int RemainingGold { get; set; }
+        private int GoldPile { get; set; }
+
+        public Asteroid(int number, int goldCount)
         {
-            this.MineralCount = mineralCount;
-            PlayerMine = 0;
+            Number = number;
+            RemainingGold = goldCount;
+            ControllingPlayer = 0;
+        }
+
+        public void MineGold(int amount)
+        {
+            GoldPile += amount;
+            RemainingGold -= amount;
+        }
+
+        public int TakeGold()
+        {
+            int temp = GoldPile;
+            GoldPile = 0;
+            return temp;
+        }
+
+        public int GetRemainingGold()
+        {
+            return RemainingGold;
         }
     }
 }

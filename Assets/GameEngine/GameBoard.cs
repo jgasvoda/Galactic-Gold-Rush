@@ -55,7 +55,7 @@ namespace Assets.GameEngine
 
                     if(!Spaces[section][row][position].isFilled())
                     {
-                        Spaces[section][row][position].asteroid = new Asteroid(10);
+                        Spaces[section][row][position].asteroid = new Asteroid(i, 10);
                         spaceFound = true;
                     }
                 }

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Assets.GameEngine
 {
@@ -50,22 +52,6 @@ namespace Assets.GameEngine
             StartPlayerTurn();
         }
 
-        public int GetVictor()
-        {
-            if (Player1.Score >= 15)
-            {
-                return 1;
-            }
-            if (Player2.Score >= 15)
-            {
-                return 2;
-            }
-            else
-            {
-                return 0;
-            }
-        }
-
         private void StartPlayerTurn()
         {
             CurrentPlayer.StartTurn();
@@ -81,7 +67,7 @@ namespace Assets.GameEngine
             CurrentPlayer.SelectedPiece.WaitingForMove = false;
             CurrentPlayer.DeselectPiece();
 
-            if (CurrentPlayer.TurnOver())
+            if (CurrentPlayer.TurnIsOver())
             {
                 if(CurrentPlayer.Team == 1)
                 {
@@ -95,6 +81,33 @@ namespace Assets.GameEngine
                 StartPlayerTurn();
             }
         }
+
+        public void AddPlayerGold()
+        {
+            CurrentPlayer.Score += CurrentPlayer.SelectedPiece.DepositGold();
+
+            GameObject target = GameObject.Find("Player" + CurrentPlayer.Team + "Score");
+            target.GetComponent<TextMeshProUGUI>().SetText(CurrentPlayer.TeamColor + " Score: " + CurrentPlayer.Score);
+
+            CheckForVictory();
+        }
+
+        public void CheckForVictory()
+        {
+            if (CurrentPlayer.Score >= 15)
+            {
+                GameObject header = GameObject.Find("WinningPlayer");
+                header.GetComponent<TextMeshProUGUI>().SetText(CurrentPlayer.TeamColor + " Wins!!");
+            }
+        }
+
+        public void RestartGame()
+        {
+            CreateGame();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+
 
         public void PieceSelect(GameObject seletedObject)
         {
@@ -113,6 +126,13 @@ namespace Assets.GameEngine
                     GameObject target = GameObject.Find("Space." + adjacentSpace.Section + "." + adjacentSpace.Row + "." + adjacentSpace.Position);
                     target.GetComponent<PolygonCollider2D>().enabled = true;
                 }
+
+                //Update Text
+                GameObject header = GameObject.Find("SelectionHeader");
+                header.GetComponent<TextMeshProUGUI>().SetText("Piece " + selection);
+
+                GameObject details = GameObject.Find("SelectionDetails");
+                details.GetComponent<TextMeshProUGUI>().SetText("Gold on Board:\n   " + CurrentPlayer.SelectedPiece.Gold);
             }
         }
 
@@ -141,6 +161,53 @@ namespace Assets.GameEngine
                 (int)char.GetNumericValue(selectedObject.name[10])
             );
             CurrentPlayer.SelectedPiece.Move(newLocation);
+
+            //Deposit Gold
+            if(newLocation.Row == 0)
+            {
+                AddPlayerGold();
+            }
+
+            //Check for Asteroid
+            BoardSpace newBoardSpace = Board.Spaces[newLocation.Section][newLocation.Row][newLocation.Position];
+            Asteroid foundAsteroid = newBoardSpace.asteroid;
+            int goldCollected = 0;
+
+            if (foundAsteroid != null)
+            {
+                GameObject asteroidUI = GameObject.Find("Ast" + foundAsteroid.Number);
+
+                //Update Text Header
+                GameObject header = GameObject.Find("SelectionHeader");
+                header.GetComponent<TextMeshProUGUI>().SetText("Asteroid " + foundAsteroid.Number);
+
+                //Newly Discovered or captured from other player
+                if (foundAsteroid.ControllingPlayer != CurrentPlayer.Team)
+                {
+                    foundAsteroid.ControllingPlayer = CurrentPlayer.Team;
+                    CurrentPlayer.ClaimAsteroid(foundAsteroid);
+
+                    asteroidUI.gameObject.transform.localPosition = selectedObject.transform.localPosition;
+                    asteroidUI.GetComponent<MeshRenderer>().enabled = true;
+
+                    //Update Text Details
+                    GameObject details = GameObject.Find("SelectionDetails");
+                    details.GetComponent<TextMeshProUGUI>().SetText("Claimed by " + CurrentPlayer.TeamColor + "\n" +
+                                                                "Gold remaining:\n   " + foundAsteroid.GetRemainingGold());
+                }
+                else
+                {
+                    //Already controlled by player, collect acumlated gold
+                    goldCollected = foundAsteroid.TakeGold();
+                    CurrentPlayer.SelectedPiece.CollectGold(goldCollected);
+
+                    //Update Text Details
+                    GameObject details = GameObject.Find("SelectionDetails");
+                    details.GetComponent<TextMeshProUGUI>().SetText("Gold collected:\n   " + goldCollected + "\n" +
+                                                                "Gold remaining:\n   " + foundAsteroid.GetRemainingGold());
+                }
+
+            }
 
             UpdatePlayerTurn();
         }

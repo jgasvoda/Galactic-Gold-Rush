@@ -11,12 +11,14 @@ namespace Assets.GameEngine
         public Piece SelectedPiece;
 
         private List<Piece> Pieces { get; set; }
+        private List<Asteroid> ControlledAsteroids { get; set; }
 
         public Player(int team, string color)
         {
             Team = team;
             TeamColor = color;
             Pieces = new List<Piece>();
+            ControlledAsteroids = new List<Asteroid>();
         }
 
         public void AddPiece(Piece newPiece)
@@ -29,6 +31,13 @@ namespace Assets.GameEngine
             foreach(var piece in Pieces)
             {
                 piece.WaitingForMove = true;
+            }
+
+            ControlledAsteroids = ControlledAsteroids.Where(a => a.ControllingPlayer == Team).ToList();
+            //Mine claimed asteroids to accumlate gold
+            foreach (var asteroid in ControlledAsteroids)
+            {
+                asteroid.MineGold(1);
             }
         }
 
@@ -47,7 +56,12 @@ namespace Assets.GameEngine
             return Pieces.IndexOf(SelectedPiece);
         }
 
-        public bool TurnOver()
+        public void ClaimAsteroid(Asteroid asteroid)
+        {
+            ControlledAsteroids.Add(asteroid);
+        }
+
+        public bool TurnIsOver()
         {
             return !Pieces.Any(p => p.WaitingForMove);
         }
