@@ -130,7 +130,6 @@ namespace Assets.GameEngine
                 //Update Text
                 GameObject header = GameObject.Find("SelectionHeader");
                 header.GetComponent<TextMeshProUGUI>().SetText("Piece " + selection);
-
                 GameObject details = GameObject.Find("SelectionDetails");
                 details.GetComponent<TextMeshProUGUI>().SetText("Gold on Board:\n   " + CurrentPlayer.SelectedPiece.Gold);
             }
@@ -155,6 +154,7 @@ namespace Assets.GameEngine
             currentPiece.GetComponent<CircleCollider2D>().enabled = false;
 
             //Update GameBoard
+            //Naming convention for spaces is "Space.X.Y.Z"
             Coordinates newLocation = new Coordinates(
                 (int)char.GetNumericValue(selectedObject.name[6]),
                 (int)char.GetNumericValue(selectedObject.name[8]),
@@ -162,13 +162,13 @@ namespace Assets.GameEngine
             );
             CurrentPlayer.SelectedPiece.Move(newLocation);
 
-            //Deposit Gold
+            //Deposit on-board Gold if the new location is at the center of the map
             if(newLocation.Row == 0)
             {
                 AddPlayerGold();
             }
 
-            //Check for Asteroid
+            //Check for Asteroid in new location
             BoardSpace newBoardSpace = Board.Spaces[newLocation.Section][newLocation.Row][newLocation.Position];
             Asteroid foundAsteroid = newBoardSpace.asteroid;
             int goldCollected = 0;
@@ -177,31 +177,28 @@ namespace Assets.GameEngine
             {
                 GameObject asteroidUI = GameObject.Find("Ast" + foundAsteroid.Number);
 
-                //Update Text Header
                 GameObject header = GameObject.Find("SelectionHeader");
                 header.GetComponent<TextMeshProUGUI>().SetText("Asteroid " + foundAsteroid.Number);
 
-                //Newly Discovered or captured from other player
+                //If Asteroid is newly Discovered or captured from other player, claim it
                 if (foundAsteroid.ControllingPlayer != CurrentPlayer.Team)
                 {
-                    foundAsteroid.ControllingPlayer = CurrentPlayer.Team;
-                    CurrentPlayer.ClaimAsteroid(foundAsteroid);
-
                     asteroidUI.gameObject.transform.localPosition = selectedObject.transform.localPosition;
                     asteroidUI.GetComponent<MeshRenderer>().enabled = true;
 
-                    //Update Text Details
+                    foundAsteroid.ControllingPlayer = CurrentPlayer.Team;
+                    CurrentPlayer.ClaimAsteroid(foundAsteroid);
+
                     GameObject details = GameObject.Find("SelectionDetails");
                     details.GetComponent<TextMeshProUGUI>().SetText("Claimed by " + CurrentPlayer.TeamColor + "\n" +
                                                                 "Gold remaining:\n   " + foundAsteroid.GetRemainingGold());
                 }
+                //Otherwise already controlled by player, collect accumlated gold
                 else
                 {
-                    //Already controlled by player, collect acumlated gold
                     goldCollected = foundAsteroid.TakeGold();
                     CurrentPlayer.SelectedPiece.CollectGold(goldCollected);
 
-                    //Update Text Details
                     GameObject details = GameObject.Find("SelectionDetails");
                     details.GetComponent<TextMeshProUGUI>().SetText("Gold collected:\n   " + goldCollected + "\n" +
                                                                 "Gold remaining:\n   " + foundAsteroid.GetRemainingGold());

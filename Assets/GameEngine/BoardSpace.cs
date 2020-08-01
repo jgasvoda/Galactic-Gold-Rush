@@ -23,7 +23,7 @@ namespace Assets.GameEngine
             AdjacentSpaces = new List<Coordinates>();
 
             #region Assign Adjacent Spaces
-            //Adjacent space is away from center
+            //Even position spaces have an adjacent space that is away from the center
             if (position % 2 == 0)
             {
                 if(row + 1 < boardSize)
@@ -31,7 +31,6 @@ namespace Assets.GameEngine
                     AdjacentSpaces.Add(new Coordinates(section, row + 1, position + 1));
                 }
             }
-            //Else Adjacent space is towards center
             else
             {
                 AdjacentSpaces.Add(new Coordinates(section, row - 1, position - 1));

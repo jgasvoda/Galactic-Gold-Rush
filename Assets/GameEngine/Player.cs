@@ -33,8 +33,10 @@ namespace Assets.GameEngine
                 piece.WaitingForMove = true;
             }
 
+            //Remove any asteroids that have been stolen in the previous turn 
             ControlledAsteroids = ControlledAsteroids.Where(a => a.ControllingPlayer == Team).ToList();
-            //Mine claimed asteroids to accumlate gold
+
+            //Mine remaining asteroids to accumlate gold
             foreach (var asteroid in ControlledAsteroids)
             {
                 asteroid.MineGold(1);
